@@ -22,7 +22,8 @@ int main(int argc, char* argv[]) {
     img::image image(argv[1]);
 
     image.to_grayscale().save();
-    image.to_lower_resolution(120, 60).save();
+//    image.to_lower_resolution(120, 60).save();
+    image.to_ascii(2);
 
 
 //    cout<<"Done !"<<endl;

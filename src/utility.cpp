@@ -5,11 +5,7 @@
 
 namespace img {
 
-    bool compare_file_extension(const std::string& filename, const std::string& extension) {
-        return get_asset_extension(filename) == extension;
-    }
-
-    void convert_to_native_separators(std::string& path) {
+    std::string convert_to_native_separators(std::string path) {
     #ifdef _WIN32
         const char separator = '/';
         const char native = '\\';
@@ -18,6 +14,7 @@ namespace img {
         const char native = '/';
     #endif
         std::replace(path.begin(), path.end(), separator, native);
+        return path;
     }
 
     std::string get_asset_name(const std::string& filepath) {
@@ -26,14 +23,19 @@ namespace img {
         std::size_t winslash = filepath.find_last_of('\\');
         std::size_t slash = filepath.find_last_of('/');
 
-        if (winslash != std::string::npos) {
-            slashPosition = winslash;
-        }
-
-        if (slash != std::string::npos) {
+        if (winslash != std::string::npos && slash != std::string::npos) {
             if (slash > winslash) {
                 slashPosition = slash;
             }
+            else {
+                slashPosition = winslash;
+            }
+        }
+        else if (winslash != std::string::npos) {
+            slashPosition = winslash;
+        }
+        else if (slash != std::string::npos) {
+            slashPosition = slash;
         }
 
         // If there exists a slash.

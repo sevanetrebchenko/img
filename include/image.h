@@ -1,6 +1,6 @@
 
-#ifndef ITOA_IMAGE_H
-#define ITOA_IMAGE_H
+#ifndef IMG_IMAGE_H
+#define IMG_IMAGE_H
 
 #include <string>
 #include <glm/glm.hpp>
@@ -35,21 +35,24 @@ namespace img {
             [[nodiscard]] image to_grayscale() const;
             [[nodiscard]] image to_lower_resolution(int x_resolution = 1, int y_resolution = 1) const;
 
-            void to_ascii() const;
+            void to_ascii(int resolution = 20) const;
 
         private:
             constexpr static const float red_weight = 0.299f;
             constexpr static const float green_weight = 0.587f;
             constexpr static const float blue_weight = 0.114f;
 
+            const std::string _base;
+
             int _width;
             int _height;
             int _channels;
             std::string _filename;
+            std::string _extension;
             bool _stb_allocated;
             unsigned char* _data;
     };
 
 }
 
-#endif //ITOA_IMAGE_H
+#endif //IMG_IMAGE_H
