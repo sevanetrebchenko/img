@@ -26,6 +26,9 @@ target_include_directories(img PUBLIC "${PROJECT_SOURCE_DIR}/include/")
 message(STATUS "Linking STB to project.")
 target_link_libraries(img stb)
 
+message(STATUS "Linking GLM to project.")
+target_link_libraries(img glm)
+
 # Link STB
 message(STATUS "Linking FreeType to project.")
 target_link_libraries(img freetype)

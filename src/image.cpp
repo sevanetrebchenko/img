@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <utility.h>
+#include <glm/glm.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -98,10 +99,106 @@ namespace img {
         }
     }
 
+    image image::to_lower_resolution(int x_resolution, int y_resolution) const {
+        image lower_res(get_asset_name(_filename) + "_" + std::to_string(x_resolution) + 'x' + std::to_string(y_resolution) + "px." + get_asset_extension(_filename), _width, _height, _channels);
+        glm::vec4 data;
+
+        for (int y = 0; y <= _height - y_resolution; y += y_resolution) {
+            for (int x = 0; x <= _width - x_resolution; x += x_resolution) {
+                data = glm::vec4(0.0f);
+
+                // Average pixels in a x_resolution * y_resolution area.
+                for (int j = 0; j < y_resolution; ++j) {
+                    for (int i = 0; i < x_resolution; ++i) {
+                        data += get_pixel(x + i, y + j);
+                    }
+                }
+                data /= (float)(x_resolution * y_resolution);
+
+                // Fill pixel data to be the same color.
+                for (int j = 0; j < y_resolution; ++j) {
+                    for (int i = 0; i < x_resolution; ++i) {
+                        lower_res.set_pixel(x + i, y + j, pixel_data { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
+                    }
+                }
+            }
+        }
+
+        // In case resolution didn't divide evenly.
+        int x_remainder = _width % x_resolution;
+        int y_remainder = _height % y_resolution;
+
+        // Right side of image.
+        for (int y = 0; y < _height - y_resolution; y += y_resolution) {
+            data = glm::vec4(0.0f);
+
+            for (int j = 0; j < y_resolution; ++j) {
+                for (int i = _width - x_remainder; i < _width; ++i) {
+                    data += get_pixel(i, y + j);
+                }
+            }
+            data /= (float)(x_remainder * y_resolution);
+
+            // Fill pixel data to be the same color.
+            for (int j = 0; j < y_resolution; ++j) {
+                for (int i = 0; i < x_remainder; ++i) {
+                    lower_res.set_pixel(_width - x_remainder + i, y + j, pixel_data { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
+                }
+            }
+        }
+
+        // Bottom side of image.
+        for (int x = 0; x < _width - x_resolution; x += x_resolution) {
+            data = glm::vec4(0.0f);
+
+            for (int j = _height - y_remainder; j < _height; ++j) {
+                for (int i = 0; i < x_resolution; ++i) {
+                    data += get_pixel(x + i, j);
+                }
+            }
+            data /= (float)(x_resolution * y_remainder);
+
+            // Fill pixel data to be the same color.
+            for (int j = 0; j < y_remainder; ++j) {
+                for (int i = 0; i < x_resolution; ++i) {
+                    lower_res.set_pixel(x + i, _height - y_remainder + j, pixel_data { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
+                }
+            }
+        }
+
+        // Bottom right corner.
+        data = glm::vec4(0.0f);
+
+        for (int j = _height - y_remainder; j < _height; ++j) {
+            for (int i = _width - x_remainder; i < _width; ++i) {
+                data += get_pixel(i, j);
+            }
+        }
+        data /= (float)(x_remainder * y_remainder);
+
+        // Fill pixel data to be the same color.
+        for (int j = 0; j < y_remainder; ++j) {
+            for (int i = 0; i < x_remainder; ++i) {
+                lower_res.set_pixel(_width - x_remainder + i, _height - y_remainder + j, pixel_data { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
+            }
+        }
+
+
+        return lower_res;
+    }
+
+    void image::to_ascii() const {
+    }
+
+
     image::pixel_data::pixel_data(unsigned char r, unsigned char g, unsigned char b, unsigned char a) : r(r),
                                                                                                         g(g),
                                                                                                         b(b),
                                                                                                         a(a) {
+    }
+
+    image::pixel_data::operator glm::vec4() const {
+        return glm::vec4(r, g, b, a);
     }
 
 }
