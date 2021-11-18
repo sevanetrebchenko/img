@@ -8,27 +8,12 @@ project(img
 set(CMAKE_CXX_STANDARD 17)
 
 # Build third-party dependencies.
-message(STATUS "--- Adding library subdirectory ---")
+message(STATUS "--- Adding lib subdirectory ---")
 add_subdirectory(lib)
 
-# PROJECT FILES
-set(CORE_SOURCE_FILES
-    "${PROJECT_SOURCE_DIR}/src/main.cpp"
-    "${PROJECT_SOURCE_DIR}/src/image.cpp"
-    "${PROJECT_SOURCE_DIR}/src/pixel.cpp"
-    "${PROJECT_SOURCE_DIR}/src/utility.cpp"
-)
-
-add_executable(img ${CORE_SOURCE_FILES})
-target_include_directories(img PUBLIC "${PROJECT_SOURCE_DIR}/include/")
-target_precompile_headers(img PUBLIC "${PROJECT_SOURCE_DIR}/include/pch.h")
-
-# DEPENDENCIES
-message(STATUS "Linking STB to project.")
-target_link_libraries(img stb)
-
-message(STATUS "Linking GLM to project.")
-target_link_libraries(img glm)
+# Build project sources.
+message(STATUS "--- Adding src subdirectory ---")
+add_subdirectory(src)
 
 
 

@@ -1,6 +1,8 @@
 
-#include "pch.h"
-#include "image.h"
+#include <iostream>
+
+#include "img/image.h"
+#include "img/process.h"
 
 void usage() {
     std::cout << "img [options]" << std::endl;
@@ -20,8 +22,7 @@ int main(int argc, char* argv[]) {
     }
 
     img::image image(argv[1]);
-    image.to_grayscale().save();
-    image.to_ascii(2);
+    img::process(image).to_grayscale().to_lower_resolution(20, 20).get().save();
 
-    return 0 ;
+    return 0;
 }
