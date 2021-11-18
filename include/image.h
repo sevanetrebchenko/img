@@ -2,9 +2,7 @@
 #ifndef IMG_IMAGE_H
 #define IMG_IMAGE_H
 
-#include <string>
-#include <glm/glm.hpp>
-
+#include "pch.h"
 #include "pixel.h"
 
 namespace img {
@@ -15,7 +13,7 @@ namespace img {
             image(const std::string& filename, int width, int height, int channels);
             ~image();
 
-            [[nodiscard]] pixel_data get_pixel(int x, int y) const;
+            [[nodiscard]] pixel get_pixel(int x, int y) const;
             void set_pixel(int x, int y, pixel data);
 
             void save() const;
@@ -28,9 +26,9 @@ namespace img {
             void to_ascii(int resolution = 20) const;
 
         private:
-            constexpr static const float red_weight = 0.299f;
-            constexpr static const float green_weight = 0.587f;
-            constexpr static const float blue_weight = 0.114f;
+            constexpr static const float r_weight = 0.299f;
+            constexpr static const float g_weight = 0.587f;
+            constexpr static const float b_weight = 0.114f;
 
             std::string _base;
 

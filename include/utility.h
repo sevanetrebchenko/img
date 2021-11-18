@@ -2,7 +2,7 @@
 #ifndef IMG_UTILITY_H
 #define IMG_UTILITY_H
 
-#include <string>
+#include "pch.h"
 
 namespace img {
 

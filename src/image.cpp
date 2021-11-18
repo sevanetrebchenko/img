@@ -1,8 +1,6 @@
 
-
-#include <utility.h>
-#include <glm/glm.hpp>
-#include <image.h>
+#include "image.h"
+#include "utility.h"
 
 #define FULL_QUALITY 100
 
@@ -55,9 +53,9 @@ namespace img {
         for (int y = 0; y < _height; ++y) {
             for (int x = 0; x < _width; ++x) {
                 // Scale data by grayscale modifiers.
-                pixel_data data = get_pixel(x, y);
-                unsigned char color = static_cast<unsigned char>((float)data.r * red_weight + (float)data.g * green_weight + (float)data.b * blue_weight);
-                pixel_data gray { color, color, color, data.a };
+                glm::vec4 data(get_pixel(x, y));
+                unsigned char color = static_cast<unsigned char>((float)data.r * r_weight + (float)data.g * g_weight + (float)data.b * b_weight);
+                pixel gray { color, color, color }; // TODO
 
                 grayscale.set_pixel(x, y, gray);
             }
@@ -66,12 +64,12 @@ namespace img {
         return grayscale;
     }
 
-    image::pixel_data image::get_pixel(int x, int y) const {
+    pixel image::get_pixel(int x, int y) const {
         unsigned char* offset = _data + (x + _width * y) * _channels;
-        return pixel_data { offset[0], offset[1], offset[2], _channels >= 4 ? offset[3] : static_cast<unsigned char>(0xff) };
+        return pixel { offset[0], offset[1], offset[2], _channels >= 4 ? offset[3] : static_cast<unsigned char>(0xff) };
     }
 
-    void image::set_pixel(int x, int y, pixel_data data) {
+    void image::set_pixel(int x, int y, pixel data) {
         unsigned char* offset = _data + (x + _width * y) * _channels;
         offset[0] = data.r;
         offset[1] = data.g;
@@ -116,7 +114,7 @@ namespace img {
                 // Fill pixel data to be the same color.
                 for (int j = 0; j < y_resolution; ++j) {
                     for (int i = 0; i < x_resolution; ++i) {
-                        lower_res.set_pixel(x + i, y + j, pixel_data { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
+                        lower_res.set_pixel(x + i, y + j, pixel { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
                     }
                 }
             }
@@ -140,7 +138,7 @@ namespace img {
             // Fill pixel data to be the same color.
             for (int j = 0; j < y_resolution; ++j) {
                 for (int i = 0; i < x_remainder; ++i) {
-                    lower_res.set_pixel(_width - x_remainder + i, y + j, pixel_data { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
+                    lower_res.set_pixel(_width - x_remainder + i, y + j, pixel { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
                 }
             }
         }
@@ -159,7 +157,7 @@ namespace img {
             // Fill pixel data to be the same color.
             for (int j = 0; j < y_remainder; ++j) {
                 for (int i = 0; i < x_resolution; ++i) {
-                    lower_res.set_pixel(x + i, _height - y_remainder + j, pixel_data { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
+                    lower_res.set_pixel(x + i, _height - y_remainder + j, pixel { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
                 }
             }
         }
@@ -177,7 +175,7 @@ namespace img {
         // Fill pixel data to be the same color.
         for (int j = 0; j < y_remainder; ++j) {
             for (int i = 0; i < x_remainder; ++i) {
-                lower_res.set_pixel(_width - x_remainder + i, _height - y_remainder + j, pixel_data { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
+                lower_res.set_pixel(_width - x_remainder + i, _height - y_remainder + j, pixel { static_cast<unsigned char>(data.r), static_cast<unsigned char>(data.g), static_cast<unsigned char>(data.b), static_cast<unsigned char>(data.a) });
             }
         }
 
@@ -195,7 +193,7 @@ namespace img {
 
         for (int y = 0; y < _height; y += 2 * resolution) {
             for (int x = 0; x < _width; x += resolution) {
-                pixel_data pixel = low_resolution_image.get_pixel(x, y);
+                pixel pixel = low_resolution_image.get_pixel(x, y);
                 ascii += sequence[(float)pixel.r / 255.0f * num_characters];
             }
 
@@ -208,17 +206,6 @@ namespace img {
         if (output.is_open()) {
             output << ascii;
         }
-    }
-
-
-    image::pixel_data::pixel_data(unsigned char r, unsigned char g, unsigned char b, unsigned char a) : r(r),
-                                                                                                        g(g),
-                                                                                                        b(b),
-                                                                                                        a(a) {
-    }
-
-    image::pixel_data::operator glm::vec4() const {
-        return glm::vec4(r, g, b, a);
     }
 
 }
