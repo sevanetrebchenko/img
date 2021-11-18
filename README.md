@@ -1,2 +1,6 @@
-# image-to-ascii
-Converter between image to ascii characters.
+# img
+
+This project is to experiment with various image processing algorithms.  
+Current supported algorithms:
+- Converting .jpg/.png images to ascii
+- K-Means Clustering 

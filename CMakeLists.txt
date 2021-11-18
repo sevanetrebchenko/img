@@ -20,6 +20,7 @@ set(CORE_SOURCE_FILES
 
 add_executable(img ${CORE_SOURCE_FILES})
 target_include_directories(img PUBLIC "${PROJECT_SOURCE_DIR}/include/")
+target_precompile_headers(img PUBLIC "${PROJECT_SOURCE_DIR}/include/pch.h")
 
 # DEPENDENCIES
 # Link FreeType
