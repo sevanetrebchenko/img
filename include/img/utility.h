@@ -2,7 +2,7 @@
 #ifndef IMG_UTILITY_H
 #define IMG_UTILITY_H
 
-#include <string>
+#include "img.h"
 
 namespace img {
 
@@ -12,6 +12,7 @@ namespace img {
     std::string get_asset_name(std::string path);
     std::string get_asset_extension(std::string path);
 
+    int random(int lower, int upper);
 }
 
 #endif //IMG_UTILITY_H

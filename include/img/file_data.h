@@ -2,7 +2,7 @@
 #ifndef IMG_FILE_DATA_H
 #define IMG_FILE_DATA_H
 
-#include <string>
+#include "img.h"
 
 namespace img {
 

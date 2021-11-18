@@ -2,11 +2,9 @@
 #ifndef IMG_IMAGE_H
 #define IMG_IMAGE_H
 
-#include <glm/glm.hpp>
-#include <string>
-
-#include "pixel.h"
-#include "file_data.h"
+#include "img.h"
+#include "img/pixel.h"
+#include "img/file_data.h"
 
 namespace img {
 

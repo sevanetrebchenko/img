@@ -1,6 +1,4 @@
 
-#include <algorithm>
-
 #include "img/utility.h"
 
 namespace img {
@@ -66,6 +64,19 @@ namespace img {
         }
 
         return path;
+    }
+
+    int random(int lower, int upper) {
+        static std::random_device device;
+        static std::mt19937::result_type seed = device() ^
+                ((std::mt19937::result_type) std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count() +
+                (std::mt19937::result_type) std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+        static std::mt19937 generator(seed);
+
+        std::uniform_int_distribution<int> distribution(lower, upper);
+        return distribution(generator);
     }
 
 }

@@ -36,8 +36,12 @@ namespace img {
         return *this;
     }
 
+    pixel::operator glm::vec3() const {
+        return { r, g, b };
+    }
+
     pixel::operator glm::vec4() const {
-        return {r, g, b, a};
+        return { r, g, b, a };
     }
 
 }

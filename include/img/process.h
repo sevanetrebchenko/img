@@ -2,10 +2,8 @@
 #ifndef IMG_PROCESS_H
 #define IMG_PROCESS_H
 
-#include <glm/glm.hpp>
-#include <string>
-
-#include "image.h"
+#include "img.h"
+#include "img/image.h"
 
 namespace img {
 

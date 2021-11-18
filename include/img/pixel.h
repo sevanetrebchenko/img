@@ -2,7 +2,7 @@
 #ifndef IMG_PIXEL_H
 #define IMG_PIXEL_H
 
-#include <glm/glm.hpp>
+#include "img.h"
 
 namespace img {
 
@@ -18,7 +18,8 @@ namespace img {
         pixel(const pixel &other);
         pixel &operator=(const pixel &other);
 
-        // Convert pixel data to glm::vec4.
+        // Convert pixel data to other type.
+        explicit operator glm::vec3() const;
         explicit operator glm::vec4() const;
 
         unsigned char r;
