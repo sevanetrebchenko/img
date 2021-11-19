@@ -22,8 +22,9 @@ int main(int argc, char* argv[]) {
     }
 
     img::image image(argv[1]);
-    img::processor(image).to_grayscale().to_lower_resolution(20, 20).get().save();
-    image.process().to_lower_resolution(30, 30).get().save();
+    image.save();
+    // img::processor(image).to_grayscale().to_lower_resolution(20, 20).get().save();
+    image.process().k_means(5).get().save();
 
     return 0;
 }

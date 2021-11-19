@@ -28,6 +28,10 @@ namespace img {
 
             [[nodiscard]] processor process() const;
 
+            [[nodiscard]] int get_height() const;
+            [[nodiscard]] int get_width() const;
+            [[nodiscard]] int get_channels() const;
+
         private:
             friend class processor;
 
@@ -35,6 +39,7 @@ namespace img {
             int width;
             int height;
             int channels;
+            int total;
             unsigned char* data;
 
             bool stb_allocated;

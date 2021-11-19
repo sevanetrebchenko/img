@@ -11,6 +11,7 @@ namespace img {
                                                 width(-1),
                                                 height(-1),
                                                 channels(-1),
+                                                total(-1),
                                                 data(nullptr),
                                                 stb_allocated(true) {
 //        stbi_set_flip_vertically_on_load(true);
@@ -27,12 +28,15 @@ namespace img {
         std::cout << "Height: " << height << std::endl;
         std::cout << "Channels: " << channels << ' ';
         std::cout << (channels >= 4 ? "[RGBA]" : "[RGB]") << std::endl;
+
+        total = width * height * channels;
     }
 
     image::image(const std::string &filepath, int width, int height, int channels) : file(filepath),
                                                                                      width(width),
                                                                                      height(height),
                                                                                      channels(channels),
+                                                                                     total(width * height * channels),
                                                                                      data(nullptr),
                                                                                      stb_allocated(false) {
         data = new unsigned char[width * height * channels];
@@ -45,6 +49,7 @@ namespace img {
     image::image(const image& other) : file(other.file),
                                        width(other.width),
                                        height(other.height),
+                                       total(other.total),
                                        channels(other.channels),
                                        data(nullptr),
                                        stb_allocated(false) // Deep copy happened, don't free with stb.
@@ -63,6 +68,7 @@ namespace img {
         width = other.width;
         height = other.height;
         channels = other.channels;
+        total = other.total;
         stb_allocated = false; // Deep copy happened, don't free with stb.
 
         // Deep copy data.
@@ -73,31 +79,40 @@ namespace img {
     }
 
     pixel image::get_pixel(int x, int y) const {
-        unsigned char *offset = data + (x + width * y) * channels;
-        return {offset[0], offset[1], offset[2], channels >= 4 ? offset[3] : static_cast<unsigned char>(0xff)};
+        int offset = (x + width * y) * channels;
+        assert(offset < total); // Validate image offset.
+        unsigned char *address = data + offset;
+
+        return {address[0], address[1], address[2], channels >= 4 ? address[3] : static_cast<unsigned char>(0xff)};
     }
 
     void image::set_pixel(int x, int y, const pixel &value) {
-        unsigned char *offset = data + (x + width * y) * channels;
-        offset[0] = value.r;
-        offset[1] = value.g;
-        offset[2] = value.b;
+        int offset = (x + width * y) * channels;
+        assert(offset < total); // Validate image offset.
+        unsigned char *address = data + offset;
+
+        address[0] = value.r;
+        address[1] = value.g;
+        address[2] = value.b;
 
         // Only set alpha if there is an alpha channel.
         if (channels >= 4) {
-            offset[3] = value.a;
+            address[3] = value.a;
         }
     }
 
     void image::set_pixel(int x, int y, const glm::vec4 &value) {
-        unsigned char *offset = data + (x + width * y) * channels;
-        offset[0] = static_cast<unsigned char>(value.r);
-        offset[1] = static_cast<unsigned char>(value.g);
-        offset[2] = static_cast<unsigned char>(value.b);
+        int offset = (x + width * y) * channels;
+        assert(offset < total); // Validate image offset.
+        unsigned char *address = data + offset;
+
+        address[0] = static_cast<unsigned char>(value.r);
+        address[1] = static_cast<unsigned char>(value.g);
+        address[2] = static_cast<unsigned char>(value.b);
 
         // Only set alpha if there is an alpha channel.
         if (channels >= 4) {
-            offset[3] = static_cast<unsigned char>(value.a);
+            address[3] = static_cast<unsigned char>(value.a);
         }
     }
 
@@ -119,6 +134,18 @@ namespace img {
 
     processor image::process() const {
         return img::processor(*this);
+    }
+
+    int image::get_height() const {
+        return height;
+    }
+
+    int image::get_width() const {
+        return width;
+    }
+
+    int image::get_channels() const {
+        return channels;
     }
 
 }

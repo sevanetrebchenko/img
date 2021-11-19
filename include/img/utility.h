@@ -6,13 +6,14 @@
 
 namespace img {
 
-    std::string convert_to_native_separators(std::string path);
+    [[nodiscard]] std::string convert_to_native_separators(std::string path);
 
-    std::string get_directory(std::string path);
-    std::string get_asset_name(std::string path);
-    std::string get_asset_extension(std::string path);
+    [[nodiscard]] std::string get_directory(std::string path);
+    [[nodiscard]] std::string get_asset_name(std::string path);
+    [[nodiscard]] std::string get_asset_extension(std::string path);
 
-    int random(int lower, int upper);
+    [[nodiscard]] int random(int lower, int upper);
+
 }
 
 #endif //IMG_UTILITY_H

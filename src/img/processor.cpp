@@ -160,25 +160,129 @@ namespace img {
         return ascii;
     }
 
+
+    // K-Means Clustering algorithm.
+    [[nodiscard]] inline float euclidian_distance(const glm::vec3& first, const glm::vec3& second) {
+        float distance = 0.0f;
+
+        for (int i = 0; i < 3; ++i) {
+            distance += (second[i] - first[i]) * (second[i] - first[i]);
+        }
+
+        return std::sqrt(distance);
+    }
+
+    [[nodiscard]] inline bool assign_cluster_ids(const image& im, const std::vector<glm::vec3>& centroids, std::vector<int>& cluster_ids) {
+        int height = im.get_height();
+        int width = im.get_width();
+        bool needs_updating = false;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                glm::vec3 data = glm::vec3(im.get_pixel(x, y));
+
+                int index = x + width * y;
+                int cluster_id = -1;
+                float smallest_distance = std::numeric_limits<float>::infinity();
+
+                // Get the closest centroid to this pixel.
+                for (int i = 0; i < centroids.size(); ++i) {
+                    float current_distance = euclidian_distance(data, centroids[i]);
+
+                    if (current_distance < smallest_distance) {
+                        // Found closer centroid.
+                        smallest_distance = current_distance;
+                        cluster_id = i; // Update cluster index.
+                    }
+                }
+
+                if (cluster_id != cluster_ids[index]) {
+                    // Cluster changed, centroids need to be updated.
+                    cluster_ids[index] = cluster_id;
+                    needs_updating = true;
+                }
+            }
+        }
+
+        return needs_updating;
+    }
+
+    inline void update_centroids(const image& im, std::vector<glm::vec3>& centroids, const std::vector<int>& cluster_ids) {
+        int height = im.get_height();
+        int width = im.get_width();
+
+        for (int i = 0; i < centroids.size(); ++i) {
+            glm::vec3 sum(0.0f);
+            int num_elements = 0;
+
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    int index = x + width * y;
+                    if (cluster_ids[index] == i) {
+                        // Do not consider colors with opacity to be a different color.
+                        pixel pix = im.get_pixel(x, y);
+                        sum += glm::vec3(pix);
+                        ++num_elements;
+                    }
+                }
+            }
+
+            // Centroid needs updating.
+            if (num_elements > 0) {
+                centroids[i] = sum / static_cast<float>(num_elements);
+            }
+        }
+    }
+
+
     processor &processor::k_means(int k) {
         int width = im.width;
         int height = im.height;
 
-        // Get all unique colors.
-        std::unordered_set<glm::vec4> unique_colors;
+        // pixel mapped to ID of centroid.
+        std::vector<int> cluster_ids;
+        cluster_ids.resize(width * height, -1);
 
-        for (int y = 0; y <= height; ++y) {
-            for (int x = 0; x <= width; ++x) {
-                unique_colors.emplace(glm::vec4(glm::vec3(im.get_pixel(x, y)), 1.0f));
+        // Get all unique colors.
+        std::unordered_set<glm::vec3> unique_colors;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                unique_colors.emplace(im.get_pixel(x, y));
             }
         }
 
         // Generate k random centroids.
-        std::vector<glm::vec4> centroids;
+        std::vector<glm::vec3> centroids;
         for (int i = 0; i < k; ++i) {
             int index = random(0, static_cast<int>(unique_colors.size()));
             centroids.emplace_back(*std::next(unique_colors.begin(), index));
         }
+
+        // Run k-means clustering.
+        while (assign_cluster_ids(im, centroids, cluster_ids)) {
+            update_centroids(im, centroids, cluster_ids);
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+
+                int cluster_id = cluster_ids[index];
+                assert(cluster_id >= 0); // Check cluster ID validity.
+                const glm::vec3& color = centroids[cluster_id];
+
+                // Update color.
+                im.set_pixel(x, y, glm::vec4(color, 255));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "k_means" + '_' + std::to_string(k) + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
     }
 
 }
