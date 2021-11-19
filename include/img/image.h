@@ -8,6 +8,9 @@
 
 namespace img {
 
+    // Forward declaration.
+    class processor;
+
     class image {
         public:
             explicit image(const std::string& filepath);
@@ -23,8 +26,10 @@ namespace img {
 
             void save() const;
 
+            [[nodiscard]] processor process() const;
+
         private:
-            friend class process;
+            friend class processor;
 
             file_data file;
             int width;

@@ -1,6 +1,7 @@
 
 #include "img/image.h"
 #include "img/utility.h"
+#include "img/processor.h"
 
 #define FULL_QUALITY 100
 
@@ -21,7 +22,7 @@ namespace img {
         }
 
         // Print image information.
-        std::cout << "Reading in image: " << file.name + '.' + file.extension << std::endl;
+        std::cout << "Asset: " << file.name + '.' + file.extension << std::endl;
         std::cout << "Width: " << width << std::endl;
         std::cout << "Height: " << height << std::endl;
         std::cout << "Channels: " << channels << ' ';
@@ -46,7 +47,7 @@ namespace img {
                                        height(other.height),
                                        channels(other.channels),
                                        data(nullptr),
-                                       stb_allocated(other.stb_allocated)
+                                       stb_allocated(false) // Deep copy happened, don't free with stb.
                                        {
         // Deep copy data.
         data = new unsigned char[width * height * channels];
@@ -62,7 +63,7 @@ namespace img {
         width = other.width;
         height = other.height;
         channels = other.channels;
-        stb_allocated = other.stb_allocated;
+        stb_allocated = false; // Deep copy happened, don't free with stb.
 
         // Deep copy data.
         data = new unsigned char[width * height * channels];
@@ -114,6 +115,10 @@ namespace img {
         else {
             std::cerr << "Invalid extension." << std::endl;
         }
+    }
+
+    processor image::process() const {
+        return img::processor(*this);
     }
 
 }

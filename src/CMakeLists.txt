@@ -1,12 +1,12 @@
 # PROJECT FILES
 set(CORE_SOURCE_FILES
-        "${PROJECT_SOURCE_DIR}/src/main.cpp"
-        "${PROJECT_SOURCE_DIR}/src/img/image.cpp"
-        "${PROJECT_SOURCE_DIR}/src/img/pixel.cpp"
-        "${PROJECT_SOURCE_DIR}/src/img/file_data.cpp"
-        "${PROJECT_SOURCE_DIR}/src/img/process.cpp"
-        "${PROJECT_SOURCE_DIR}/src/img/utility.cpp"
-        )
+    "${PROJECT_SOURCE_DIR}/src/main.cpp"
+    "${PROJECT_SOURCE_DIR}/src/img/image.cpp"
+    "${PROJECT_SOURCE_DIR}/src/img/pixel.cpp"
+    "${PROJECT_SOURCE_DIR}/src/img/file_data.cpp"
+    "${PROJECT_SOURCE_DIR}/src/img/processor.cpp"
+    "${PROJECT_SOURCE_DIR}/src/img/utility.cpp"
+    )
 
 add_executable(img ${CORE_SOURCE_FILES})
 target_include_directories(img PUBLIC "${PROJECT_SOURCE_DIR}/include")
