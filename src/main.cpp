@@ -11,20 +11,22 @@ void usage() {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc == 1) {
-        usage();
-    }
+//    if (argc == 1) {
+//        usage();
+//    }
+//
+//    // Print out instructions on how to use.
+//    if (argc < 2) {
+//        std::cerr << "error in calling program" << std::endl;
+//        return 1;
+//    }
 
-    // Print out instructions on how to use.
-    if (argc < 2) {
-        std::cerr << "error in calling program" << std::endl;
-        return 1;
-    }
+    img::image image("assets/images/the_weeknd.jpg");
 
-    img::image image(argv[1]);
-    image.save();
-    // img::processor(image).to_grayscale().to_lower_resolution(20, 20).get().save();
-    image.process().k_means(5).get().save();
+    for (int k = 2; k <= 16; ++k) {
+        std::cout << "processing: " << k << std::endl;
+        image.process().k_means(k, true).save();
+    }
 
     return 0;
 }

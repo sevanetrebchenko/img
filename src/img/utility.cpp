@@ -67,14 +67,12 @@ namespace img {
     }
 
     int random(int lower, int upper) {
-        static std::random_device device;
-        static std::mt19937::result_type seed = device() ^
-                ((std::mt19937::result_type) std::chrono::duration_cast<std::chrono::seconds>(
-                    std::chrono::system_clock::now().time_since_epoch()).count() +
-                (std::mt19937::result_type) std::chrono::duration_cast<std::chrono::microseconds>(
-                    std::chrono::high_resolution_clock::now().time_since_epoch()).count());
-        static std::mt19937 generator(seed);
+        typedef std::chrono::high_resolution_clock clock;
+        typedef std::chrono::duration<float, std::milli> duration;
 
+        static clock::time_point start = clock::now();
+        duration elapsed = clock::now() - start;
+        std::mt19937 generator(elapsed.count());
         std::uniform_int_distribution<int> distribution(lower, upper);
         return distribution(generator);
     }

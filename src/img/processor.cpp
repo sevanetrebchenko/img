@@ -4,27 +4,6 @@
 
 namespace img {
 
-    // Global functions.
-    [[nodiscard]] inline std::string get_output_directory() {
-        static std::string output_directory = convert_to_native_separators("assets/generated");
-        return output_directory; // Copy.
-    }
-
-    [[nodiscard]] inline glm::vec4 get_average_color(const image& im, int x, int y, int x_resolution, int y_resolution) {
-        glm::vec4 data(0.0f);
-
-        // Average values in one "pixel".
-        for (int j = 0; j < y_resolution; ++j) {
-            for (int i = 0; i < x_resolution; ++i) {
-                data += im.get_pixel(x + i, y + j);
-            }
-        }
-        data /= (float) (x_resolution * y_resolution);
-
-        return data;
-    }
-
-
     processor::processor(const image &im) : im(im) {
     }
 
@@ -32,6 +11,10 @@ namespace img {
 
     image processor::get() const {
         return im;
+    }
+
+    void processor::save() const {
+        im.save();
     }
 
     processor &processor::to_grayscale() {
@@ -66,7 +49,6 @@ namespace img {
     processor &processor::to_lower_resolution(int x_resolution, int y_resolution) {
         int width = im.width;
         int height = im.height;
-        int channels = im.channels;
 
         // Invalid dimensions.
         if (x_resolution < 0 || y_resolution < 0) {
@@ -78,7 +60,7 @@ namespace img {
 
         for (int y = 0; y <= height - y_resolution; y += y_resolution) {
             for (int x = 0; x <= width - x_resolution; x += x_resolution) {
-                data = get_average_color(im, x, y, x_resolution, y_resolution);
+                data = get_average_color(x, y, x_resolution, y_resolution);
 
                 // Fill pixel data to be the same color.
                 for (int j = 0; j < y_resolution; ++j) {
@@ -95,7 +77,7 @@ namespace img {
 
         // Right side of image.
         for (int y = 0; y < height - y_resolution; y += y_resolution) {
-            data = get_average_color(im, width - x_remainder, y, x_remainder, y_resolution);
+            data = get_average_color(width - x_remainder, y, x_remainder, y_resolution);
 
             // Fill pixel data to be the same color.
             for (int j = 0; j < y_resolution; ++j) {
@@ -107,7 +89,7 @@ namespace img {
 
         // Bottom side of image.
         for (int x = 0; x < width - x_resolution; x += x_resolution) {
-            data = get_average_color(im, x, height - y_remainder, x_resolution, y_remainder);
+            data = get_average_color(x, height - y_remainder, x_resolution, y_remainder);
 
             // Fill pixel data to be the same color.
             for (int j = 0; j < y_remainder; ++j) {
@@ -118,7 +100,7 @@ namespace img {
         }
 
         // Bottom right corner.
-        data = get_average_color(im, width - x_remainder, height - y_remainder, x_remainder, y_remainder);
+        data = get_average_color(width - x_remainder, height - y_remainder, x_remainder, y_remainder);
 
         // Fill pixel data to be the same color.
         for (int j = 0; j < y_remainder; ++j) {
@@ -160,19 +142,86 @@ namespace img {
         return ascii;
     }
 
+    processor &processor::k_means(int k, bool maintain_alpha) {
+        int width = im.width;
+        int height = im.height;
 
-    // K-Means Clustering algorithm.
-    [[nodiscard]] inline float euclidian_distance(const glm::vec3& first, const glm::vec3& second) {
-        float distance = 0.0f;
+        // pixel mapped to ID of centroid.
+        std::vector<int> cluster_ids;
+        cluster_ids.resize(width * height, -1);
 
-        for (int i = 0; i < 3; ++i) {
-            distance += (second[i] - first[i]) * (second[i] - first[i]);
+        // Get all unique colors.
+        std::unordered_set<glm::vec3> unique_colors;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                unique_colors.emplace(im.get_pixel(x, y));
+            }
         }
 
-        return std::sqrt(distance);
+        // Generate k random centroids.
+        std::vector<glm::vec3> centroids;
+        for (int i = 0; i < k; ++i) {
+            int index = random(0, static_cast<int>(unique_colors.size()));
+            centroids.emplace_back(*std::next(unique_colors.begin(), index));
+        }
+
+        // Run k-means clustering.
+        while (assign_cluster_ids(centroids, cluster_ids)) {
+            update_centroids(centroids, cluster_ids);
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+
+                int cluster_id = cluster_ids[index];
+                assert(cluster_id >= 0); // Check cluster ID validity.
+                const glm::vec3& color = centroids[cluster_id];
+
+                // Update color.
+                unsigned alpha = 255;
+                if (maintain_alpha) {
+                    alpha = im.get_pixel(x, y).a;
+                }
+
+                im.set_pixel(x, y, glm::vec4(color, alpha));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "k_means" + '_' + std::to_string(k) + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
     }
 
-    [[nodiscard]] inline bool assign_cluster_ids(const image& im, const std::vector<glm::vec3>& centroids, std::vector<int>& cluster_ids) {
+
+    std::string processor::get_output_directory() const { // NOLINT(readability-convert-member-functions-to-static)
+        static std::string output_directory = convert_to_native_separators("assets/generated");
+        return output_directory; // Copy.
+    }
+
+    glm::vec4 processor::get_average_color(int x, int y, int x_resolution, int y_resolution) const {
+        glm::vec4 data(0.0f);
+
+        // Average values in one "pixel".
+        for (int j = 0; j < y_resolution; ++j) {
+            for (int i = 0; i < x_resolution; ++i) {
+                data += im.get_pixel(x + i, y + j);
+            }
+        }
+        data /= (float) (x_resolution * y_resolution);
+
+        return data;
+    }
+
+    float processor::euclidian_distance(const glm::vec3& first, const glm::vec3& second) const { // NOLINT(readability-convert-member-functions-to-static)
+        return glm::length2(second - first); // Magnitude squared.
+    }
+
+    bool processor::assign_cluster_ids(const std::vector<glm::vec3>& centroids, std::vector<int>& cluster_ids) const {
         int height = im.get_height();
         int width = im.get_width();
         bool needs_updating = false;
@@ -207,7 +256,7 @@ namespace img {
         return needs_updating;
     }
 
-    inline void update_centroids(const image& im, std::vector<glm::vec3>& centroids, const std::vector<int>& cluster_ids) {
+    void processor::update_centroids(std::vector<glm::vec3>& centroids, const std::vector<int>& cluster_ids) const {
         int height = im.get_height();
         int width = im.get_width();
 
@@ -232,57 +281,6 @@ namespace img {
                 centroids[i] = sum / static_cast<float>(num_elements);
             }
         }
-    }
-
-
-    processor &processor::k_means(int k) {
-        int width = im.width;
-        int height = im.height;
-
-        // pixel mapped to ID of centroid.
-        std::vector<int> cluster_ids;
-        cluster_ids.resize(width * height, -1);
-
-        // Get all unique colors.
-        std::unordered_set<glm::vec3> unique_colors;
-
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
-                unique_colors.emplace(im.get_pixel(x, y));
-            }
-        }
-
-        // Generate k random centroids.
-        std::vector<glm::vec3> centroids;
-        for (int i = 0; i < k; ++i) {
-            int index = random(0, static_cast<int>(unique_colors.size()));
-            centroids.emplace_back(*std::next(unique_colors.begin(), index));
-        }
-
-        // Run k-means clustering.
-        while (assign_cluster_ids(im, centroids, cluster_ids)) {
-            update_centroids(im, centroids, cluster_ids);
-        }
-
-        // Write resulting colors back to image.
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
-                int index = x + width * y;
-
-                int cluster_id = cluster_ids[index];
-                assert(cluster_id >= 0); // Check cluster ID validity.
-                const glm::vec3& color = centroids[cluster_id];
-
-                // Update color.
-                im.set_pixel(x, y, glm::vec4(color, 255));
-            }
-        }
-
-        // Update naming.
-        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "k_means" + '_' + std::to_string(k) + '.' + im.file.extension;
-        im.file = file_data(filename);
-
-        return *this;
     }
 
 }
