@@ -309,6 +309,74 @@ namespace img {
         return *this;
     }
 
+    processor &processor::dither_false_floyd_steinberg() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        glm::vec4 pixel_error = glm::vec4(0.0f);
+
+        // Floyd-Steinberg requires storage for the error values being applied on the next row.
+        std::vector<glm::vec4> row_error;
+        row_error.resize(width, glm::vec4(0.0f));
+
+        std::vector<glm::vec4> next_row_error;
+        next_row_error.resize(width, glm::vec4(0.0f));
+
+        glm::vec4 value;
+
+        // Floyd-Steinberg dithering matrix:
+        //   X   3/8      <- next pixel error
+        //  3/8  2/8      <- next row error (accumulated)
+        float next = 3.0f / 8.0f;
+        float row_1 = 3.0f / 8.0f;
+        float row_2 = 2.0f / 8.0f;
+
+        for (int y = 0; y < height - 1; ++y) {
+            // Ensure valid bounds.
+            for (int x = 0; x < width - 1; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+
+                // Apply error from previous pixel in current row and diffused error from the above row.
+                value += (pixel_error + row_error[x]);
+
+                glm::vec4 unscaled_error = skew_direction(value);
+                dithered[index] = value;
+
+                // Error calculations.
+                pixel_error = next * unscaled_error;
+                next_row_error[x + 0] += row_1 * unscaled_error;
+                next_row_error[x + 1] += row_2 * unscaled_error;
+            }
+
+            // Discard next pixel error after processing one line.
+            pixel_error = glm::vec4(0.0f);
+
+            // Update next row error to apply to the next row.
+            row_error = next_row_error;
+            for (int i = 0; i < width; ++i) {
+                next_row_error[i] = glm::vec4(0.0f);
+            }
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dithered_false_floyd_steinberg" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
     std::string processor::get_output_directory() const { // NOLINT(readability-convert-member-functions-to-static)
         static std::string output_directory = convert_to_native_separators("assets/generated/" + im.file.name);
         return output_directory; // Copy.
@@ -416,6 +484,5 @@ namespace img {
 
         return distance;
     }
-
 
 }

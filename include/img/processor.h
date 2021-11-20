@@ -35,6 +35,7 @@ namespace img {
             // Dithering algorithms.
             [[nodiscard]] processor& dither_error_diffusion();
             [[nodiscard]] processor& dither_floyd_steinberg();
+            [[nodiscard]] processor& dither_false_floyd_steinberg();
 
         private:
             [[nodiscard]] std::string get_output_directory() const;
