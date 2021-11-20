@@ -32,7 +32,7 @@ namespace img {
 
         if (last_separator_index != std::string::npos) {
             // Found position of separator.
-            directory = path.substr(0, last_separator_index);
+            directory = path.substr(0, last_separator_index + 1); // Keep slash.
         }
 
         return directory;

@@ -32,6 +32,10 @@ namespace img {
             //   k - number of clusters
             [[nodiscard]] processor& k_means(int k, bool maintain_alpha = false);
 
+            // Dithering algorithms.
+            [[nodiscard]] processor& dither_error_diffusion();
+            [[nodiscard]] processor& dither_floyd_steinberg();
+
         private:
 
             [[nodiscard]] std::string get_output_directory() const;
@@ -39,6 +43,7 @@ namespace img {
             // Samples pixels in a x_resolution by y_resolution area, starting at (x, y) from the given image.
             // Returns the average color of the pixels.
             [[nodiscard]] glm::vec4 get_average_color(int x, int y, int x_resolution, int y_resolution) const;
+
 
             // K-Means clustering algorithm helper functions.
             // Returns squared euclidian distance between two given points.
@@ -49,6 +54,10 @@ namespace img {
 
             // Updates the centroid values based on the surrounding cluster data.
             void update_centroids(std::vector<glm::vec3>& centroids, const std::vector<int>& cluster_ids) const;
+
+
+            // Dithering helper functions.
+            [[nodiscard]] glm::vec4 skew_direction(glm::vec4& value) const;
 
             image im;
     };

@@ -118,14 +118,19 @@ namespace img {
 
     void image::save() const {
         const std::string &ext = file.extension;
-        std::string output_path = convert_to_native_separators("assets/generated/" + file.name + '.' + ext);
+
+        // Create directory for file if it doesn't exist.
+        bool directory_exists = std::filesystem::exists(file.directory);
+        if (!directory_exists || (directory_exists && std::filesystem::is_directory(file.directory))) {
+            std::filesystem::create_directory(file.directory);
+        }
 
         if (ext == "jpg" || ext == "JPG" || ext == "jpeg" || ext == "JPEG") {
-            stbi_write_jpg(output_path.c_str(), width, height, channels, data, FULL_QUALITY);
+            stbi_write_jpg(file.path.c_str(), width, height, channels, data, FULL_QUALITY);
         }
         else if (ext == "png" || ext == "PNG") {
             int stride = width * channels;
-            stbi_write_png(output_path.c_str(), width, height, channels, data, stride);
+            stbi_write_png(file.path.c_str(), width, height, channels, data, stride);
         }
         else {
             std::cerr << "Invalid extension." << std::endl;

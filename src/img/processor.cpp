@@ -197,9 +197,97 @@ namespace img {
         return *this;
     }
 
+    processor &processor::dither_error_diffusion() {
+        glm::vec4 next_pixel_error = glm::vec4(0.0f);
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+
+                // Diffuse error.
+                value += next_pixel_error;
+
+                // For next iteration.
+                next_pixel_error = skew_direction(value);
+                dithered[index] = value;
+            }
+
+            // Discard error after processing one line.
+            next_pixel_error = glm::vec4(0.0f);
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dithered_error_diffusion" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
+    processor &processor::dither_floyd_steinberg() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        glm::vec4 next_pixel_error = glm::vec4(0.0f);
+
+        // Floyd-Steinberg requires storage for the error values being applied on the next row.
+        std::vector<glm::vec4> next_row_error;
+        next_row_error.resize(width, glm::vec4(0.0f));
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height - 1; ++y) {
+            for (int x = 0; x < width - 1; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+
+                // Diffuse error.
+                value += next_pixel_error;
+
+                // For next iteration.
+                next_pixel_error = skew_direction(value);
+                dithered[index] = value;
+            }
+
+            // Discard error after processing one line.
+            next_pixel_error = glm::vec4(0.0f);
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dithered_ed1d" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
 
     std::string processor::get_output_directory() const { // NOLINT(readability-convert-member-functions-to-static)
-        static std::string output_directory = convert_to_native_separators("assets/generated");
+        static std::string output_directory = convert_to_native_separators("assets/generated/" + im.file.name);
         return output_directory; // Copy.
     }
 
@@ -222,8 +310,8 @@ namespace img {
     }
 
     bool processor::assign_cluster_ids(const std::vector<glm::vec3>& centroids, std::vector<int>& cluster_ids) const {
-        int height = im.get_height();
-        int width = im.get_width();
+        int height = im.height;
+        int width = im.width;
         bool needs_updating = false;
 
         for (int y = 0; y < height; ++y) {
@@ -257,8 +345,8 @@ namespace img {
     }
 
     void processor::update_centroids(std::vector<glm::vec3>& centroids, const std::vector<int>& cluster_ids) const {
-        int height = im.get_height();
-        int width = im.get_width();
+        int height = im.height;
+        int width = im.width;
 
         for (int i = 0; i < centroids.size(); ++i) {
             glm::vec3 sum(0.0f);
@@ -282,5 +370,29 @@ namespace img {
             }
         }
     }
+
+    glm::vec4 processor::skew_direction(glm::vec4& value) const {
+        static const glm::vec4 zero = glm::vec4(0.0f);
+        static const glm::vec4 one = glm::vec4(255.0f);
+
+        float distance_to_zero = euclidian_distance(value, zero);
+        float distance_to_one = euclidian_distance(value, one);
+
+        // Set to zero or one depending on which one the given 'value' is closest to.
+        // Returns distance to the closest value.
+        glm::vec4 distance;
+
+        if (distance_to_zero < distance_to_one) {
+            distance = value - zero;
+            value = zero;
+        }
+        else {
+            distance = value - one;
+            value = one;
+        }
+
+        return distance;
+    }
+
 
 }

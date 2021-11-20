@@ -13,6 +13,7 @@
 #include <string>
 #include <random>
 #include <chrono>
+#include <filesystem>
 
 // Third-party dependencies.
 #include <glm/glm.hpp>

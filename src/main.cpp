@@ -23,10 +23,15 @@ int main(int argc, char* argv[]) {
 
     img::image image("assets/images/journey.jpg");
 
-    for (int k = 2; k <= 32; ++k) {
-        std::cout << "processing: " << k << std::endl;
-        image.process().k_means(k, true).save();
-    }
+    image.process().dither_error_diffusion().save();
+
+//    image.process().to_lower_resolution(10, 10).k_means(15, true).save();
+
+
+//    for (int k = 2; k <= 256; ++k) {
+//        std::cout << "processing: " << k << std::endl;
+//        image.process().k_means(k, true).save();
+//    }
 
     return 0;
 }
