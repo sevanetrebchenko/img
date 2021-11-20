@@ -5,3 +5,6 @@ This project is to experiment with various image processing algorithms.
 - Downscaling image resolution
 - Converting images to ascii
 - Recoloring images via K-Means Clustering algorithm
+- Dithering algorithms
+  - Error diffusion
+  - Floyd-Steinberg
