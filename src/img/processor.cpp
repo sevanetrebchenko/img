@@ -261,9 +261,9 @@ namespace img {
         //           X    7/16      <- next pixel error
         //    3/16  5/16  1/16      <- next row error (accumulated)
         float next = 7.0f / 16.0f;
-        float row_1 = 3.0f / 16.0f;
-        float row_2 = 5.0f / 16.0f;
-        float row_3 = 1.0f / 16.0f;
+        float row1 = 3.0f / 16.0f;
+        float row2 = 5.0f / 16.0f;
+        float row3 = 1.0f / 16.0f;
 
         for (int y = 0; y < height - 1; ++y) {
             // Ensure valid bounds.
@@ -279,9 +279,9 @@ namespace img {
 
                 // Error calculations.
                 pixel_error = next * unscaled_error;
-                next_row_error[x - 1] += row_1 * unscaled_error;
-                next_row_error[x + 0] += row_2 * unscaled_error;
-                next_row_error[x + 1] += row_3 * unscaled_error;
+                next_row_error[x - 1] += row1 * unscaled_error;
+                next_row_error[x + 0] += row2 * unscaled_error;
+                next_row_error[x + 1] += row3 * unscaled_error;
             }
 
             // Discard next pixel error after processing one line.
@@ -331,8 +331,8 @@ namespace img {
         //   X   3/8      <- next pixel error
         //  3/8  2/8      <- next row error (accumulated)
         float next = 3.0f / 8.0f;
-        float row_1 = 3.0f / 8.0f;
-        float row_2 = 2.0f / 8.0f;
+        float row1 = 3.0f / 8.0f;
+        float row2 = 2.0f / 8.0f;
 
         for (int y = 0; y < height - 1; ++y) {
             // Ensure valid bounds.
@@ -348,8 +348,8 @@ namespace img {
 
                 // Error calculations.
                 pixel_error = next * unscaled_error;
-                next_row_error[x + 0] += row_1 * unscaled_error;
-                next_row_error[x + 1] += row_2 * unscaled_error;
+                next_row_error[x + 0] += row1 * unscaled_error;
+                next_row_error[x + 1] += row2 * unscaled_error;
             }
 
             // Discard next pixel error after processing one line.
@@ -372,6 +372,72 @@ namespace img {
 
         // Update naming.
         std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dithered_false_floyd_steinberg" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
+    processor &processor::dither_jarvis_judice_ninke() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        // Jarvis-Judice-Ninke requires storage for the error values being applied on the two next rows.
+        std::vector<glm::vec4> error;
+        error.resize(width * height, glm::vec4(0.0f));
+
+        // Jarvis-Judice-Ninke dithering matrix:
+        //               X    7/48  5/48
+        //  3/48  5/48  7/48  5/48  3/48
+        //  1/48  3/48  5/48  3/48  1/48
+        float error1 = 1.0f / 48.0f;
+        float error3 = 3.0f / 48.0f;
+        float error5 = 5.0f / 48.0f;
+        float error7 = 7.0f / 48.0f;
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height - 2; ++y) {
+            // Ensure valid bounds.
+            for (int x = 2; x < width - 2; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+                value += error[index];
+
+                glm::vec4 unscaled_error = skew_direction(value);
+
+                // Propagate error to neighboring cells based on error propagation matrix.
+                error[(x + 1) + width * (y + 0)] += error7 * unscaled_error;
+                error[(x + 2) + width * (y + 0)] += error5 * unscaled_error;
+
+                error[(x - 2) + width * (y + 1)] += error3 * unscaled_error;
+                error[(x - 1) + width * (y + 1)] += error5 * unscaled_error;
+                error[(x - 0) + width * (y + 1)] += error7 * unscaled_error;
+                error[(x + 1) + width * (y + 1)] += error5 * unscaled_error;
+                error[(x + 2) + width * (y + 1)] += error3 * unscaled_error;
+
+                error[(x - 2) + width * (y + 2)] += error1 * unscaled_error;
+                error[(x - 1) + width * (y + 2)] += error3 * unscaled_error;
+                error[(x - 0) + width * (y + 2)] += error5 * unscaled_error;
+                error[(x + 1) + width * (y + 2)] += error3 * unscaled_error;
+                error[(x + 2) + width * (y + 2)] += error1 * unscaled_error;
+
+                dithered[index] = value;
+            }
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dithered_jarvis_judice_ninke" + '.' + im.file.extension;
         im.file = file_data(filename);
 
         return *this;
