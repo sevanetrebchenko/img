@@ -37,7 +37,6 @@ namespace img {
             [[nodiscard]] processor& dither_floyd_steinberg();
 
         private:
-
             [[nodiscard]] std::string get_output_directory() const;
 
             // Samples pixels in a x_resolution by y_resolution area, starting at (x, y) from the given image.

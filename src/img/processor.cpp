@@ -252,23 +252,41 @@ namespace img {
         std::vector<glm::vec4> next_row_error;
         next_row_error.resize(width, glm::vec4(0.0f));
 
+        // Structure for building the error for the next row.
+        std::vector<glm::vec4> row_error;
+        row_error.resize(width, glm::vec4(0.0f));
+
         glm::vec4 value;
 
         for (int y = 0; y < height - 1; ++y) {
-            for (int x = 0; x < width - 1; ++x) {
+
+            for (int x = 1; x < width - 1; ++x) {
                 int index = x + width * y;
                 value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
-
-                // Diffuse error.
-                value += next_pixel_error;
+                value += (next_pixel_error + next_row_error[x]);
 
                 // For next iteration.
-                next_pixel_error = skew_direction(value);
+                glm::vec4 unscaled_error = skew_direction(value);
+
+                // Error calculations.
+                next_pixel_error = 7.0f / 16.0f * unscaled_error;
+
+                row_error[x - 1] += 3.0f / 16.0f * unscaled_error;
+                row_error[x + 0] += 5.0f / 16.0f * unscaled_error;
+                row_error[x + 1] += 1.0f / 16.0f * unscaled_error;
+
                 dithered[index] = value;
             }
 
-            // Discard error after processing one line.
+            // Discard next pixel error after processing one line.
             next_pixel_error = glm::vec4(0.0f);
+
+            // Update next row error to apply to the next row.
+            next_row_error = row_error;
+
+            for (int i = 0; i < width; ++i) {
+                row_error[i] = glm::vec4(0.0f);
+            }
         }
 
         // Write resulting colors back to image.
