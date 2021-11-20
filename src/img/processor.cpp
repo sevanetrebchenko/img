@@ -298,7 +298,7 @@ namespace img {
         }
 
         // Update naming.
-        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dithered_ed1d" + '.' + im.file.extension;
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dithered_floyd_steinberg" + '.' + im.file.extension;
         im.file = file_data(filename);
 
         return *this;

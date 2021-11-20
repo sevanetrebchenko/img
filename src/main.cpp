@@ -23,7 +23,9 @@ int main(int argc, char* argv[]) {
 
     img::image image("assets/images/journey.jpg");
 
+    image.process().dither_error_diffusion().save();
     image.process().dither_floyd_steinberg().save();
+
 
 //    image.process().to_lower_resolution(10, 10).k_means(15, true).save();
 
