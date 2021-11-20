@@ -246,46 +246,51 @@ namespace img {
         std::vector<glm::vec4> dithered;
         dithered.resize(width * height, glm::vec4(0.0f));
 
-        glm::vec4 next_pixel_error = glm::vec4(0.0f);
+        glm::vec4 pixel_error = glm::vec4(0.0f);
 
         // Floyd-Steinberg requires storage for the error values being applied on the next row.
-        std::vector<glm::vec4> next_row_error;
-        next_row_error.resize(width, glm::vec4(0.0f));
-
-        // Structure for building the error for the next row.
         std::vector<glm::vec4> row_error;
         row_error.resize(width, glm::vec4(0.0f));
 
+        std::vector<glm::vec4> next_row_error;
+        next_row_error.resize(width, glm::vec4(0.0f));
+
         glm::vec4 value;
 
-        for (int y = 0; y < height - 1; ++y) {
+        // Floyd-Steinberg dithering matrix:
+        //           X    7/16      <- next pixel error
+        //    3/16  5/16  1/16      <- next row error (accumulated)
+        float next = 7.0f / 16.0f;
+        float row_1 = 3.0f / 16.0f;
+        float row_2 = 5.0f / 16.0f;
+        float row_3 = 1.0f / 16.0f;
 
+        for (int y = 0; y < height - 1; ++y) {
+            // Ensure valid bounds.
             for (int x = 1; x < width - 1; ++x) {
                 int index = x + width * y;
                 value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
-                value += (next_pixel_error + next_row_error[x]);
 
-                // For next iteration.
+                // Apply error from previous pixel in current row and diffused error from the above row.
+                value += (pixel_error + row_error[x]);
+
                 glm::vec4 unscaled_error = skew_direction(value);
+                dithered[index] = value;
 
                 // Error calculations.
-                next_pixel_error = 7.0f / 16.0f * unscaled_error;
-
-                row_error[x - 1] += 3.0f / 16.0f * unscaled_error;
-                row_error[x + 0] += 5.0f / 16.0f * unscaled_error;
-                row_error[x + 1] += 1.0f / 16.0f * unscaled_error;
-
-                dithered[index] = value;
+                pixel_error = next * unscaled_error;
+                next_row_error[x - 1] += row_1 * unscaled_error;
+                next_row_error[x + 0] += row_2 * unscaled_error;
+                next_row_error[x + 1] += row_3 * unscaled_error;
             }
 
             // Discard next pixel error after processing one line.
-            next_pixel_error = glm::vec4(0.0f);
+            pixel_error = glm::vec4(0.0f);
 
             // Update next row error to apply to the next row.
-            next_row_error = row_error;
-
+            row_error = next_row_error;
             for (int i = 0; i < width; ++i) {
-                row_error[i] = glm::vec4(0.0f);
+                next_row_error[i] = glm::vec4(0.0f);
             }
         }
 
