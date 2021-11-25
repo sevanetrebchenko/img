@@ -37,6 +37,12 @@ namespace img {
             [[nodiscard]] processor& dither_floyd_steinberg();
             [[nodiscard]] processor& dither_false_floyd_steinberg();
             [[nodiscard]] processor& dither_jarvis_judice_ninke();
+            [[nodiscard]] processor& dither_stucki();
+            [[nodiscard]] processor& dither_atkinson();
+            [[nodiscard]] processor& dither_burkes();
+            [[nodiscard]] processor& dither_sierra();
+            [[nodiscard]] processor& dither_two_row_sierra();
+            [[nodiscard]] processor& dither_sierra_lite();
 
         private:
             [[nodiscard]] std::string get_output_directory() const;

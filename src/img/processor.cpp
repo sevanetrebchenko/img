@@ -384,7 +384,7 @@ namespace img {
         std::vector<glm::vec4> dithered;
         dithered.resize(width * height, glm::vec4(0.0f));
 
-        // Jarvis-Judice-Ninke requires storage for the error values being applied on the two next rows.
+        // Algorithm requires storage for the error values being applied on the two next rows.
         std::vector<glm::vec4> error;
         error.resize(width * height, glm::vec4(0.0f));
 
@@ -438,6 +438,363 @@ namespace img {
 
         // Update naming.
         std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dithered_jarvis_judice_ninke" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
+    processor &processor::dither_stucki() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        // Algorithm requires storage for the error values being applied on the two next rows.
+        std::vector<glm::vec4> error;
+        error.resize(width * height, glm::vec4(0.0f));
+
+        // Stucki dithering matrix:
+        //               X    8/42  4/42
+        //  2/42  4/42  8/42  4/42  2/42
+        //  1/42  2/42  4/42  2/42  1/42
+        float error1 = 1.0f / 42.0f;
+        float error2 = 2.0f / 42.0f;
+        float error4 = 4.0f / 42.0f;
+        float error8 = 8.0f / 42.0f;
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height - 2; ++y) {
+            // Ensure valid bounds.
+            for (int x = 2; x < width - 2; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+                value += error[index];
+
+                glm::vec4 unscaled_error = skew_direction(value);
+
+                // Propagate error to neighboring cells based on error propagation matrix.
+                error[(x + 1) + width * (y + 0)] += error8 * unscaled_error;
+                error[(x + 2) + width * (y + 0)] += error4 * unscaled_error;
+
+                error[(x - 2) + width * (y + 1)] += error2 * unscaled_error;
+                error[(x - 1) + width * (y + 1)] += error4 * unscaled_error;
+                error[(x - 0) + width * (y + 1)] += error8 * unscaled_error;
+                error[(x + 1) + width * (y + 1)] += error4 * unscaled_error;
+                error[(x + 2) + width * (y + 1)] += error2 * unscaled_error;
+
+                error[(x - 2) + width * (y + 2)] += error1 * unscaled_error;
+                error[(x - 1) + width * (y + 2)] += error2 * unscaled_error;
+                error[(x - 0) + width * (y + 2)] += error4 * unscaled_error;
+                error[(x + 1) + width * (y + 2)] += error2 * unscaled_error;
+                error[(x + 2) + width * (y + 2)] += error1 * unscaled_error;
+
+                dithered[index] = value;
+            }
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dither_stucki" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
+    processor &processor::dither_atkinson() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        // Algorithm requires storage for the error values being applied on the two next rows.
+        std::vector<glm::vec4> error;
+        error.resize(width * height, glm::vec4(0.0f));
+
+        // Stucki dithering matrix:
+        //        X   1/8  1/8
+        //  1/8  1/8  1/8
+        //       1/8
+        float error1 = 1.0f / 8.0f;
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height - 2; ++y) {
+            // Ensure valid bounds.
+            for (int x = 2; x < width - 2; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+                value += error[index];
+
+                glm::vec4 unscaled_error = skew_direction(value);
+
+                // Propagate error to neighboring cells based on error propagation matrix.
+                error[(x + 1) + width * (y + 0)] += error1 * unscaled_error;
+                error[(x + 2) + width * (y + 0)] += error1 * unscaled_error;
+
+                error[(x - 1) + width * (y + 1)] += error1 * unscaled_error;
+                error[(x - 0) + width * (y + 1)] += error1 * unscaled_error;
+                error[(x + 1) + width * (y + 1)] += error1 * unscaled_error;
+
+                error[(x - 0) + width * (y + 2)] += error1 * unscaled_error;
+
+                dithered[index] = value;
+            }
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dither_atkinson" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
+    processor &processor::dither_burkes() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        // Algorithm requires storage for the error values being applied on the two next rows.
+        std::vector<glm::vec4> error;
+        error.resize(width * height, glm::vec4(0.0f));
+
+        // Burkes dithering matrix:
+        //               X    8/32  4/32
+        //  2/32  4/32  8/32  4/32  2/32
+        float error2 = 2.0f / 32.0f;
+        float error4 = 4.0f / 32.0f;
+        float error8 = 8.0f / 32.0f;
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height - 2; ++y) {
+            // Ensure valid bounds.
+            for (int x = 2; x < width - 2; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+                value += error[index];
+
+                glm::vec4 unscaled_error = skew_direction(value);
+
+                // Propagate error to neighboring cells based on error propagation matrix.
+                error[(x + 1) + width * (y + 0)] += error8 * unscaled_error;
+                error[(x + 2) + width * (y + 0)] += error4 * unscaled_error;
+
+                error[(x - 2) + width * (y + 1)] += error2 * unscaled_error;
+                error[(x - 1) + width * (y + 1)] += error4 * unscaled_error;
+                error[(x - 0) + width * (y + 1)] += error8 * unscaled_error;
+                error[(x + 1) + width * (y + 1)] += error4 * unscaled_error;
+                error[(x + 2) + width * (y + 1)] += error2 * unscaled_error;
+
+                dithered[index] = value;
+            }
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dither_burkes" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
+    processor &processor::dither_sierra() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        // Algorithm requires storage for the error values being applied on the two next rows.
+        std::vector<glm::vec4> error;
+        error.resize(width * height, glm::vec4(0.0f));
+
+        // Sierra dithering matrix:
+        //               X    5/32  3/32
+        //  2/32  4/32  5/32  4/32  2/32
+        //        2/32  3/32  2/32
+        float error2 = 2.0f / 32.0f;
+        float error3 = 3.0f / 32.0f;
+        float error4 = 4.0f / 32.0f;
+        float error5 = 5.0f / 32.0f;
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height - 2; ++y) {
+            // Ensure valid bounds.
+            for (int x = 2; x < width - 2; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+                value += error[index];
+
+                glm::vec4 unscaled_error = skew_direction(value);
+
+                // Propagate error to neighboring cells based on error propagation matrix.
+                error[(x + 1) + width * (y + 0)] += error5 * unscaled_error;
+                error[(x + 2) + width * (y + 0)] += error3 * unscaled_error;
+
+                error[(x - 2) + width * (y + 1)] += error2 * unscaled_error;
+                error[(x - 1) + width * (y + 1)] += error4 * unscaled_error;
+                error[(x - 0) + width * (y + 1)] += error5 * unscaled_error;
+                error[(x + 1) + width * (y + 1)] += error4 * unscaled_error;
+                error[(x + 2) + width * (y + 1)] += error2 * unscaled_error;
+
+                error[(x - 1) + width * (y + 2)] += error2 * unscaled_error;
+                error[(x - 0) + width * (y + 2)] += error3 * unscaled_error;
+                error[(x + 1) + width * (y + 2)] += error2 * unscaled_error;
+
+                dithered[index] = value;
+            }
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dither_sierra" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
+    processor &processor::dither_two_row_sierra() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        // Algorithm requires storage for the error values being applied on the two next rows.
+        std::vector<glm::vec4> error;
+        error.resize(width * height, glm::vec4(0.0f));
+
+        // Two-Row Sierra dithering matrix:
+        //               X    4/16  3/16
+        //  1/16  2/16  3/16  2/16  1/16
+        float error1 = 1.0f / 16.0f;
+        float error2 = 2.0f / 16.0f;
+        float error3 = 3.0f / 16.0f;
+        float error4 = 4.0f / 16.0f;
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height - 2; ++y) {
+            // Ensure valid bounds.
+            for (int x = 2; x < width - 2; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+                value += error[index];
+
+                glm::vec4 unscaled_error = skew_direction(value);
+
+                // Propagate error to neighboring cells based on error propagation matrix.
+                error[(x + 1) + width * (y + 0)] += error4 * unscaled_error;
+                error[(x + 2) + width * (y + 0)] += error3 * unscaled_error;
+
+                error[(x - 2) + width * (y + 1)] += error1 * unscaled_error;
+                error[(x - 1) + width * (y + 1)] += error2 * unscaled_error;
+                error[(x - 0) + width * (y + 1)] += error3 * unscaled_error;
+                error[(x + 1) + width * (y + 1)] += error2 * unscaled_error;
+                error[(x + 2) + width * (y + 1)] += error1 * unscaled_error;
+
+                dithered[index] = value;
+            }
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dither_two_row_sierra" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
+    processor &processor::dither_sierra_lite() {
+        int height = im.height;
+        int width = im.width;
+
+        std::vector<glm::vec4> dithered;
+        dithered.resize(width * height, glm::vec4(0.0f));
+
+        // Algorithm requires storage for the error values being applied on the two next rows.
+        std::vector<glm::vec4> error;
+        error.resize(width * height, glm::vec4(0.0f));
+
+        // Sierra-Lite dithering matrix:
+        //               X   2/4
+        //        1/4   1/4
+        float error1 = 1.0f / 4.0f;
+        float error2 = 2.0f / 4.0f;
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height - 2; ++y) {
+            // Ensure valid bounds.
+            for (int x = 2; x < width - 2; ++x) {
+                int index = x + width * y;
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+                value += error[index];
+
+                glm::vec4 unscaled_error = skew_direction(value);
+
+                // Propagate error to neighboring cells based on error propagation matrix.
+                error[(x + 1) + width * (y + 0)] += error2 * unscaled_error;
+
+                error[(x - 1) + width * (y + 1)] += error1 * unscaled_error;
+                error[(x - 0) + width * (y + 1)] += error1 * unscaled_error;
+
+                dithered[index] = value;
+            }
+        }
+
+        // Write resulting colors back to image.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int index = x + width * y;
+                im.set_pixel(x, y, glm::vec4(glm::vec3(dithered[index]), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dither_sierra_lite" + '.' + im.file.extension;
         im.file = file_data(filename);
 
         return *this;

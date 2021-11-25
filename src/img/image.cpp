@@ -56,7 +56,7 @@ namespace img {
                                        {
         // Deep copy data.
         data = new unsigned char[width * height * channels];
-        std::memcpy(data, other.data, width * height * channels);
+        memcpy(data, other.data, width * height * channels);
     }
 
     image& image::operator=(const image& other) {
@@ -73,7 +73,7 @@ namespace img {
 
         // Deep copy data.
         data = new unsigned char[width * height * channels];
-        std::memcpy(data, other.data, width * height * channels);
+        memcpy(data, other.data, width * height * channels);
 
         return *this;
     }
