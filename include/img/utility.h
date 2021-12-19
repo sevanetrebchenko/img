@@ -14,6 +14,12 @@ namespace img {
 
     [[nodiscard]] int random(int lower, int upper);
 
+    // Assumes positive integer power.
+    [[nodiscard]] int integer_power(int base, unsigned power);
+
+    // Gets the power of 'base' that is at least 'value'.
+    [[nodiscard]] int next_power_of(int base, unsigned value);
+
 }
 
 #endif //IMG_UTILITY_H

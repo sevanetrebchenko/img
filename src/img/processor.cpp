@@ -800,6 +800,40 @@ namespace img {
         return *this;
     }
 
+    processor &processor::dither_bayer(int matrix_width, int matrix_height) {
+        // Get Bayer Matrix that encompasses the desired matrix dimension.
+        int max = matrix_height >= matrix_width ? matrix_height : matrix_width;
+
+        int bayer_matrix_level = next_power_of(2, max) - 1; // Zero-based.
+
+        std::vector<float> bayer_matrix = get_bayer_matrix(bayer_matrix_level);
+        int dimension = get_bayer_matrix_dimension(bayer_matrix_level);
+
+        int height = im.height;
+        int width = im.width;
+
+        glm::vec4 value;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+                float bayer_element = bayer_matrix[(y % matrix_height) * dimension + (x % matrix_width)];
+
+                // Bayer Matrix is in the domain [0, 1].
+                value /= glm::vec4(255.0f);
+
+                value = (value.r + value.g + value.b) / 3.0f > bayer_element ? glm::vec4(255.0f) : glm::vec4(0.0f);
+                im.set_pixel(x, y, value);
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "dither_bayer_" + std::to_string(matrix_width) + 'x' + std::to_string(matrix_height) + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
     std::string processor::get_output_directory() const { // NOLINT(readability-convert-member-functions-to-static)
         static std::string output_directory = convert_to_native_separators("assets/generated/" + im.file.name);
         return output_directory; // Copy.
@@ -906,6 +940,79 @@ namespace img {
         }
 
         return distance;
+    }
+
+    std::vector<float> processor::get_bayer_matrix_helper(int n) const {
+        int dimension = integer_power(2, n + 1);
+
+        std::vector<float> matrix{ };
+        matrix.resize(dimension * dimension);
+
+        // Bayer(0) = [ 0  2 ]
+        //            [ 3  1 ]
+        //  ...
+        // Bayer(n) = [ 4 * Bayer(n - 1) + 0    4 * Bayer(n - 1) + 2 ]
+        //            [ 4 * Bayer(n - 1) + 3    4 * Bayer(n - 1) + 1 ]
+
+        if (n == 0) {
+            // Base case.
+            matrix[0] = 0;
+            matrix[1] = 2;
+            matrix[2] = 3;
+            matrix[3] = 1;
+        }
+        else {
+            std::vector<float> previous = get_bayer_matrix_helper(n - 1);
+            int previous_dimension = integer_power(2, n);
+
+            int index = 0;
+
+            // Copy over elements.
+            // Top two, row by row.
+            for (int y = 0; y < previous_dimension; ++y) {
+                // Copy row from first Bayer matrix.
+                for (int x = 0; x < previous_dimension; ++x) {
+                    matrix[index++] = 4.0f * previous[y * previous_dimension + x] + 0.0f;
+                }
+
+                // Copy row from second Bayer matrix.
+                for (int x = 0; x < previous_dimension; ++x) {
+                    matrix[index++] = 4.0f * previous[y * previous_dimension + x] + 2.0f;
+                }
+            }
+
+            // Bottom two, row by row.
+            for (int y = 0; y < previous_dimension; ++y) {
+                // Copy row from first Bayer matrix.
+                for (int x = 0; x < previous_dimension; ++x) {
+                    matrix[index++] = 4.0f * previous[y * previous_dimension + x] + 3.0f;
+                }
+
+                // Copy row from second Bayer matrix.
+                for (int x = 0; x < previous_dimension; ++x) {
+                    matrix[index++] = 4.0f * previous[y * previous_dimension + x] + 1.0f;
+                }
+            }
+        }
+
+        return matrix;
+    }
+
+    std::vector<float> processor::get_bayer_matrix(int n) const {
+        std::vector<float> bayer_matrix = get_bayer_matrix_helper(n);
+
+        // Apply normalization (divide all elements by 2 ^ (2 * n + 2)
+        float divisor = static_cast<float>(integer_power(2, 2 * n + 2));
+
+        for (float& value : bayer_matrix) {
+            value /= divisor;
+        }
+
+        return bayer_matrix;
+    }
+
+    int processor::get_bayer_matrix_dimension(int n) const {
+        return integer_power(2, n + 1);
     }
 
 }

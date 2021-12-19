@@ -77,4 +77,30 @@ namespace img {
         return distribution(generator);
     }
 
+    int integer_power(int base, unsigned power) {
+        int result = 1;
+
+        if (power == 0) {
+            return result;
+        }
+
+        while (power > 0) {
+            result *= base;
+            --power;
+        }
+
+        return result;
+    }
+
+    int next_power_of(int base, unsigned value) {
+        int count = 0;
+
+        while (value != 0) {
+            value /= 2;
+            ++count;
+        }
+
+        return count;
+    }
+
 }

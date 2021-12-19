@@ -43,6 +43,7 @@ namespace img {
             [[nodiscard]] processor& dither_sierra();
             [[nodiscard]] processor& dither_two_row_sierra();
             [[nodiscard]] processor& dither_sierra_lite();
+            [[nodiscard]] processor& dither_bayer(int matrix_width, int matrix_height);
 
         private:
             [[nodiscard]] std::string get_output_directory() const;
@@ -65,6 +66,22 @@ namespace img {
 
             // Dithering helper functions.
             [[nodiscard]] glm::vec4 skew_direction(glm::vec4& value) const;
+
+
+            // Constructs ordered dithering threshold map with side length as a power of 2. Resulting matrix is
+            // normalized.
+            // n-values corresponding to matrix dimensions:
+            //   0 - 2x2
+            //   1 - 4x4
+            //   2 - 8x8
+            //   3 - 16x16
+            [[nodiscard]] std::vector<float> get_bayer_matrix(int n) const;
+
+            // Constructs un-normalized threshold map based on https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps.
+            [[nodiscard]] std::vector<float> get_bayer_matrix_helper(int n) const;
+
+            // Converts from n-value to Bayer Matrix dimension.
+            [[nodiscard]] int get_bayer_matrix_dimension(int n) const;
 
             image im;
     };
