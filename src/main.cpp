@@ -21,8 +21,9 @@ int main(int argc, char* argv[]) {
 //        return 1;
 //    }
 
-    img::image image("assets/images/journey.jpg");
-    image.process().voronoi(500, img::processor::distribution_type::uniform).save();
+    img::image image("assets/images/the_weeknd.jpg");
+    image.process().voronoi(600, img::processor::distribution_type::uniform).save();
+    image.process().k_means(6).save();
 
 
 //    image.process().to_lower_resolution(10, 10).k_means(15, true).save();

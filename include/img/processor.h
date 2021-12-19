@@ -48,7 +48,7 @@ namespace img {
             enum distribution_type {
                 uniform,
                 poisson_disk,
-                hexgrid,
+                hexagonal_grid,
                 random
             };
 
@@ -96,14 +96,15 @@ namespace img {
 
             // Helper class for creating Voronoi diagrams.
             struct voronoi_region {
-                explicit voronoi_region(const glm::ivec2& in);
-                void add_influence(const glm::ivec2& in, const glm::vec4& value);
+                explicit voronoi_region(const glm::vec2& point);
+                void add_influence(const glm::vec2& point, const glm::vec4& value);
                 [[nodiscard]] glm::vec4 get_average_color() const;
 
-                glm::ivec2 point;
-                std::vector<glm::ivec2> influence_positions;
+                glm::vec2 center;
+                std::vector<glm::ivec2> pixels;
                 glm::vec4 color; // Running total of color (from all influences) at this region.
             };
+
 
             image im;
     };
