@@ -817,6 +817,8 @@ namespace img {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 value = glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f); // Ignore alpha channel.
+
+                // Helpful resource for this part: https://github.com/ShadowfaxRodeo/dither-me-this
                 float bayer_element = bayer_matrix[(y % matrix_height) * dimension + (x % matrix_width)];
 
                 // Bayer Matrix is in the domain [0, 1].

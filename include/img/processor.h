@@ -45,6 +45,8 @@ namespace img {
             [[nodiscard]] processor& dither_sierra_lite();
             [[nodiscard]] processor& dither_bayer(int matrix_width, int matrix_height);
 
+            // To Voronoi diagram.
+
         private:
             [[nodiscard]] std::string get_output_directory() const;
 
