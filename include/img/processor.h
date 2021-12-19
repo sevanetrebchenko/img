@@ -45,7 +45,15 @@ namespace img {
             [[nodiscard]] processor& dither_sierra_lite();
             [[nodiscard]] processor& dither_bayer(int matrix_width, int matrix_height);
 
+            enum distribution_type {
+                uniform,
+                poisson_disk,
+                hexgrid,
+                random
+            };
+
             // To Voronoi diagram.
+            [[nodiscard]] processor& voronoi(int num_regions, distribution_type distribution);
 
         private:
             [[nodiscard]] std::string get_output_directory() const;
@@ -84,6 +92,18 @@ namespace img {
 
             // Converts from n-value to Bayer Matrix dimension.
             [[nodiscard]] int get_bayer_matrix_dimension(int n) const;
+
+
+            // Helper class for creating Voronoi diagrams.
+            struct voronoi_region {
+                explicit voronoi_region(const glm::ivec2& in);
+                void add_influence(const glm::ivec2& in, const glm::vec4& value);
+                [[nodiscard]] glm::vec4 get_average_color() const;
+
+                glm::ivec2 point;
+                std::vector<glm::ivec2> influence_positions;
+                glm::vec4 color; // Running total of color (from all influences) at this region.
+            };
 
             image im;
     };

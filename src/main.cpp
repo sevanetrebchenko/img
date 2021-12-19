@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
 //    }
 
     img::image image("assets/images/journey.jpg");
-    image.process().dither_bayer(2, 6).save();
+    image.process().voronoi(500, img::processor::distribution_type::uniform).save();
 
 
 //    image.process().to_lower_resolution(10, 10).k_means(15, true).save();

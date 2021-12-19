@@ -66,15 +66,23 @@ namespace img {
         return path;
     }
 
-    int random(int lower, int upper) {
-        typedef std::chrono::high_resolution_clock clock;
-        typedef std::chrono::duration<float, std::milli> duration;
+    std::vector<glm::ivec2> poisson_disk_2d(int width, int height, float minimum_separation, int rejection_limit) {
+        float cell_size = minimum_separation / glm::sqrt(2.0f);
+        int grid_width = std::ceil(static_cast<float>(width) / cell_size);
+        int grid_height = std::ceil(static_cast<float>(height) / cell_size);
 
-        static clock::time_point start = clock::now();
-        duration elapsed = clock::now() - start;
-        std::mt19937 generator(elapsed.count());
-        std::uniform_int_distribution<int> distribution(lower, upper);
-        return distribution(generator);
+        int grid_size = grid_width * grid_height;
+
+        std::vector<int> grid;
+        grid.resize(grid_size);
+
+        // Initialize values to a default -1.
+        for (int i = 0; i < grid_size; ++i) {
+            grid[i] = -1;
+        }
+
+
+        glm::ivec2 initial = uniform_distribution(glm::ivec2(0, 0), glm::ivec2(width, height));
     }
 
     int integer_power(int base, unsigned power) {

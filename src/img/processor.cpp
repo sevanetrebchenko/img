@@ -162,7 +162,7 @@ namespace img {
         // Generate k random centroids.
         std::vector<glm::vec3> centroids;
         for (int i = 0; i < k; ++i) {
-            int index = random(0, static_cast<int>(unique_colors.size()));
+            int index = uniform_distribution(0, static_cast<int>(unique_colors.size()));
             centroids.emplace_back(*std::next(unique_colors.begin(), index));
         }
 
@@ -836,6 +836,63 @@ namespace img {
         return *this;
     }
 
+    processor &processor::voronoi(int num_regions, processor::distribution_type distribution) {
+        std::vector<voronoi_region> regions;
+        regions.reserve(num_regions);
+
+        int height = im.height;
+        int width = im.width;
+
+        switch (distribution) {
+            case uniform:
+                for (int i = 0; i < num_regions; ++i) {
+                    regions.emplace_back(uniform_distribution(glm::ivec2(0, 0), glm::ivec2(width, height)));
+                }
+                break;
+            default:
+                break;
+        }
+
+        // Classify pixels.
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                float smallest_distance = std::numeric_limits<float>::max();
+                int index = -1;
+
+                // Get the closest region to this pixel.
+                for (int i = 0; i < num_regions; ++i) {
+                    voronoi_region& region = regions[i];
+                    float distance = glm::distance(glm::vec2(region.point), glm::vec2(x, y));
+
+                    if (distance < smallest_distance) {
+                        smallest_distance = distance;
+                        index = i;
+                    }
+                }
+
+                // Append this pixel to this region's pixel list.
+                voronoi_region& region = regions[index];
+                region.add_influence(glm::ivec2(x, y), glm::vec4(glm::vec3(im.get_pixel(x, y)), 255.0f));
+            }
+        }
+
+        for (const voronoi_region& region : regions) {
+            // Get average color for this region.
+            glm::vec4 average_color = region.get_average_color();
+
+            // Apply average color to output image.
+            for (const glm::ivec2& pixel : region.influence_positions) {
+                im.set_pixel(pixel.x, pixel.y, glm::vec4(glm::vec3(average_color), 255.0f));
+            }
+        }
+
+        // Update naming.
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "voronoi" + '.' + im.file.extension;
+        im.file = file_data(filename);
+
+        return *this;
+    }
+
     std::string processor::get_output_directory() const { // NOLINT(readability-convert-member-functions-to-static)
         static std::string output_directory = convert_to_native_separators("assets/generated/" + im.file.name);
         return output_directory; // Copy.
@@ -1017,4 +1074,18 @@ namespace img {
         return integer_power(2, n + 1);
     }
 
+    processor::voronoi_region::voronoi_region(const glm::ivec2 &in) : point(in),
+                                                                      influence_positions(),
+                                                                      color(0.0f)
+                                                                      {
+    }
+
+    void processor::voronoi_region::add_influence(const glm::ivec2 &in, const glm::vec4 &value) {
+        influence_positions.emplace_back(in);
+        color += value;
+    }
+
+    glm::vec4 processor::voronoi_region::get_average_color() const {
+        return color / static_cast<float>(influence_positions.size());
+    }
 }
