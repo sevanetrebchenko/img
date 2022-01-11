@@ -74,15 +74,103 @@ namespace img {
         int grid_size = grid_width * grid_height;
 
         std::vector<int> grid;
-        grid.resize(grid_size);
+        grid.resize(grid_size * grid_size);
 
         // Initialize values to a default -1.
         for (int i = 0; i < grid_size; ++i) {
-            grid[i] = -1;
+            for (int j = 0; j < grid_size; ++j) {
+                grid[j + grid_size * i] = -1;
+            }
         }
 
+        std::vector<int> active_list;
+        std::vector<glm::ivec2> point_list;
 
-        glm::ivec2 initial = uniform_distribution(glm::ivec2(0, 0), glm::ivec2(width, height));
+        // Generate initial random point.
+        glm::vec2 random (uniform_distribution(0.0f, static_cast<float>(grid_size)), uniform_distribution(0.0f, static_cast<float>(grid_size)));
+        glm::ivec2 initial_point(glm::floor(random));
+
+        int valid_index = 0;
+
+        active_list.emplace_back(valid_index++);
+        point_list.emplace_back(initial_point);
+
+        while (!active_list.empty()) {
+
+            // Choose random index.
+            int index = active_list[uniform_distribution(0, (int)active_list.size() - 1)];
+            glm::vec2 point = point_list[index];
+
+            bool valid = false;
+
+            for (int i = 0; i < rejection_limit; ++i) {
+                // Generate point uniformly in spherical annulus between radius r and 2r around the chosen point.
+                float angle = uniform_distribution(0.0f, 3.14159f * 2.0f);
+                float radius = uniform_distribution(0.0f, 1.0f) * minimum_separation + minimum_separation;
+                glm::vec2 offset (radius * glm::cos(angle), radius * glm::sin(angle));
+
+                glm::ivec2 test(glm::floor((point + offset) / cell_size));
+
+                if (test.x < 0 || test.x > grid_size) {
+                    continue;
+                }
+
+                if (test.y < 0 || test.y > grid_size) {
+                    continue;
+                }
+
+                // Check to make sure selected grid location doesn't already have a point.
+                if (grid[test.x + grid_size * test.y] != -1) {
+                    continue;
+                }
+
+                bool passed = true;
+
+                for (int y = -1; y < 2; ++y) {
+                    for (int x = -1; x < 2; ++x) {
+                        // Don't check against test cell.
+                        if (x == 0 && y == 0) {
+                            continue;
+                        }
+
+                        glm::ivec2 position(test.x + x, test.y + y);
+
+                        // Validate cell bounds.
+                        if (position.x < 0 || position.x >= grid_size) {
+                            continue;
+                        }
+
+                        if (position.y < 0 || position.y >= grid_size) {
+                            continue;
+                        }
+
+                        int grid_index = grid[position.x + grid_size * position.y];
+                        if (grid_index >= 0) {
+                            // Found point at this index, compare distances.
+                            if (glm::distance(glm::vec2(position), glm::vec2(test)) < minimum_separation) {
+                                // Point too close.
+                                passed = false;
+                            }
+                        }
+                    }
+                }
+
+                if (passed) {
+                    valid = true;
+
+                    grid[test.x + grid_size * test.y] = valid_index;
+                    active_list.emplace_back(valid_index++);
+                    point_list.emplace_back(test);
+                    break;
+                }
+            }
+
+            if (!valid && !active_list.empty()) {
+                active_list.erase(active_list.begin() + index);
+            }
+        }
+
+        return point_list;
     }
 
     int integer_power(int base, unsigned power) {

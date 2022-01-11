@@ -836,30 +836,15 @@ namespace img {
         return *this;
     }
 
-    processor &processor::voronoi(int num_regions, processor::distribution_type distribution) {
+    processor &processor::voronoi(int num_regions) {
         std::vector<voronoi_region> regions;
         regions.reserve(num_regions);
 
         int height = im.height;
         int width = im.width;
 
-        switch (distribution) {
-            case uniform:
-                for (int i = 0; i < num_regions; ++i) {
-                    regions.emplace_back(uniform_distribution(glm::vec2(0, 0), glm::vec2(width, height)));
-                }
-                break;
-            case poisson_disk:
-                break;
-            case hexagonal_grid:
-                break;
-            case random:
-                for (int i = 0; i < num_regions; ++i) {
-
-                }
-                break;
-            default:
-                break;
+        for (int i = 0; i < num_regions; ++i) {
+            regions.emplace_back(uniform_distribution(glm::vec2(0, 0), glm::vec2(width, height)));
         }
 
         // Classify pixels.
@@ -895,13 +880,13 @@ namespace img {
         for (const voronoi_region& region : regions) {
             average_color = region.get_average_color();
 
-            for (const glm::ivec2& pixel : region.pixels) {
-                im.set_pixel(pixel.x, pixel.y, average_color);
+            for (const glm::ivec2& p : region.pixels) {
+                im.set_pixel(p.x, p.y, average_color);
             }
         }
 
         // Update naming.
-        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "voronoi" + '.' + im.file.extension;
+        std::string filename = get_output_directory() + "/" + im.file.name + '_' + "voronoi" + '_' + std::to_string(num_regions) + '.' + im.file.extension;
         im.file = file_data(filename);
 
         return *this;

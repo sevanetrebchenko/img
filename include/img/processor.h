@@ -45,15 +45,8 @@ namespace img {
             [[nodiscard]] processor& dither_sierra_lite();
             [[nodiscard]] processor& dither_bayer(int matrix_width, int matrix_height);
 
-            enum distribution_type {
-                uniform,
-                poisson_disk,
-                hexagonal_grid,
-                random
-            };
-
-            // To Voronoi diagram.
-            [[nodiscard]] processor& voronoi(int num_regions, distribution_type distribution);
+            // To Voronoi diagram, using uniform distribution.
+            [[nodiscard]] processor& voronoi(int num_regions);
 
         private:
             [[nodiscard]] std::string get_output_directory() const;
