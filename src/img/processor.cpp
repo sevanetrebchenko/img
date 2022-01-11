@@ -35,7 +35,7 @@ namespace img {
                 unsigned char color = static_cast<unsigned char>((float) value.r * r_weight +
                                                                  (float) value.g * g_weight +
                                                                  (float) value.b * b_weight);
-                im.set_pixel(x, y, glm::vec4(color, color, color, 1.0f));
+                im.set_pixel(x, y, glm::vec4(color, color, color, 255.0f));
             }
         }
 
