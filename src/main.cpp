@@ -6,15 +6,15 @@
 
 int main(int argc, char* argv[]) {
 
-    img::image image("assets/images/desert.png");
+    img::image image("assets/images/toucan.jpg");
 
-//    image.process().to_grayscale().save();
-//
-//    image.process().to_lower_resolution(20, 20).save();
-//
-//    for (int k = 2; k <= 16; ++k) {
-//        image.process().k_means(k).save();
-//    }
+    image.process().to_grayscale().save();
+
+    image.process().to_lower_resolution(20, 20).save();
+
+    for (int k = 2; k <= 16; ++k) {
+        image.process().k_means(k).save();
+    }
 
     image.process().dither_error_diffusion().save();
     image.process().dither_floyd_steinberg().save();
@@ -31,14 +31,14 @@ int main(int argc, char* argv[]) {
     image.process().dither_bayer(8, 8).save();
     image.process().dither_bayer(4, 6).save();
 
-//    image.process().voronoi(50).save();
-//    image.process().voronoi(100).save();
-//    image.process().voronoi(200).save();
-//    image.process().voronoi(500).save();
-//    image.process().voronoi(1000).save();
-//    image.process().voronoi(2000).save();
-//    image.process().voronoi(5000).save();
-//    image.process().voronoi(10000).save();
+    image.process().voronoi(50).save();
+    image.process().voronoi(100).save();
+    image.process().voronoi(200).save();
+    image.process().voronoi(500).save();
+    image.process().voronoi(1000).save();
+    image.process().voronoi(2000).save();
+    image.process().voronoi(5000).save();
+    image.process().voronoi(10000).save();
 
     return 0;
 }
