@@ -9,16 +9,28 @@ This project is to experiment with various image processing algorithms, written 
 
 ## Algorithms and Results
 
-Additional image processing results (not shown below) can be viewed in `assets/generated/`.
+Additional image processing results, as well as the original images used for the GIFs, can be viewed in `assets/generated/`. Original images can be viewed in `assets/images`. Note that, due to the size of the example image used below, some visual details may be lost. Please refer to the aforementioned image processing result directory for the highest visual quality image.
+
+| Original image |
+| :---: |
+| ![Original](https://github.com/sevanetrebchenko/img/blob/master/assets/images/desert.png) |
 
 | Converting images to grayscale |
 | :---: |
-| ![Grayscale](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_grayscale.png) <br> Algorithm outputs the average color for the overall square for each pixel contained within it. |
+| ![Grayscale](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_grayscale.png) <br> Algorithm converts image to grayscale, with color conversion constants taken [from this Wikipedia article](https://en.wikipedia.org/wiki/Grayscale). |
 
-- Converting images to grayscale
-- Downscaling image resolution
-- Converting images to ascii
-- Recoloring images via K-Means Clustering algorithm
-- Dithering algorithms
-  - Error diffusion
-  - Floyd-Steinberg
+| Downscaling image resolution |
+| :---: |
+| ![Downscale](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_20x20px.png) <br> Algorithm outputs the average color for the overall square for each pixel contained within it. The above image has been downscaled from 2560 x 1080 pixels to 128 x 54 pixels (each square is 20 x 20 pixels in size). |
+
+| Recoloring images via the [K-Means Clustering algorithm](https://en.wikipedia.org/wiki/K-means_clustering) |
+| :---: |
+| ![K-Means](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_k_means.gif) <br> Algorithm recolors the output image based on the k-means (number of individual colors, k). The higher the k-value, the more colors are present in the output image. The above GIF shows the original image processed with k-values ranging from 2 to 16. |
+
+| Various [dithering](https://en.wikipedia.org/wiki/Dither) algorithms |
+| :---: |
+| ![Error Diffusion](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_error_diffusion.png) <br> Error Diffusion <br><br> ![Floyd Steinberg](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_floyd_steinberg.png) <br> Floyd-Steinberg <br><br> ![False Floyd Steinberg](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_false_floyd_steinberg.png) <br> False Floyd-Steinberg <br><br> ![False Floyd Steinberg](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_jarvis_judice_ninke.png) <br> Jarvis-Judice-Ninke <br><br> ![Stucki](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_stucki.png) <br> Stucki <br><br> ![Atkinson](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_atkinson.png) <br> Atkinson <br><br> ![Burkes](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_burkes.png) <br> Burkes <br><br> ![Sierra](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_sierra.png) <br> Sierra <br><br> ![Sierra-Lite](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_sierra-lite.png) <br> Sierra-Lite <br><br> ![Two Row Sierra](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_two-row-sierra.png) <br> Two-Row Sierra <br><br> ![Bayer2x2](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_bayer2x2.png) <br> 2 x 2 Bayer Matrix (ordered dithering) <br><br> ![Bayer4x4](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_bayer4x4.png) <br> 4 x 4 Bayer Matrix (ordered dithering) <br><br> ![Bayer8x8](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_bayer8x8.png) <br> 8 x 8 Bayer Matrix (ordered dithering) <br><br> ![Bayer4x6](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_dither_bayer4x6.png) <br> 4 x 6 Bayer Matrix (ordered dithering) <br><br> |
+
+| [Voronoi Diagram](https://en.wikipedia.org/wiki/Voronoi_diagram) |
+| :---: |
+| ![Voronoi](https://github.com/sevanetrebchenko/img/blob/master/assets/generated/desert/desert_voronoi.gif) <br> Algorithm generates uniformly distributed Vonoroi regions and outputs the average color for the region for each pixel contained within it. The above GIF shows the original image processed with 50, 100, 200, 500, 1000, 2000, 5000, and 10000 Voronoi regions. |
